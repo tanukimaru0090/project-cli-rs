@@ -13,7 +13,13 @@ use std::process::{Command, Output};
 // newコマンド
 #[derive(Debug, Parser)]
 struct New {
-    #[arg(short,long,required = true,default_value="cpp",value_name="LanguageName")]
+    #[arg(
+        short,
+        long,
+        required = true,
+        default_value = "cpp",
+        value_name = "LanguageName"
+    )]
     lang: LanguageType,
     #[arg(value_name = "ProjectName")]
     name: String,
@@ -68,11 +74,12 @@ struct MainCommand {
 #[derive(Debug, Clone, clap::ValueEnum)]
 enum LanguageType {
     Cpp,
-    Rust,
-    Csharp,
+    Rs,
+    Cs,
     Java,
-    Python,
-    Haxe,
+    Py,
+    Hx,
+    Rb,
 }
 
 // 言語に応じたサンプルコードの種類
@@ -104,7 +111,7 @@ fn create_default_directory(name: &str) -> Result<(), String> {
 // 言語に応じてプロジェクトディレクトリを作成する
 fn create_project_directory(new: &New, out_print: bool) {
     match new.lang {
-        LanguageType::Python => {
+        LanguageType::Py => {
             let proj_name = new.name.clone();
             let proj_path = new.name.to_string() + "/";
             // デフォルトの共通ディレクトリの作成
@@ -124,6 +131,76 @@ fn create_project_directory(new: &New, out_print: bool) {
                     return;
                 }
             }
+        }
+        LanguageType::Rb => {
+            let proj_name = new.name.clone();
+            let proj_path = new.name.to_string() + "/";
+            // 実行可能スクリプトを置くディレクトリの作成
+            if let Err(e) = create_dir_all(proj_path.clone() + "bin") {
+                println!("ディレクトリの作成に失敗しました {}", e);
+                return;
+            }
+
+            // ソースディレクトリの作成
+            if let Err(e) = create_dir_all(proj_path.clone() + "lib") {
+                println!("ディレクトリの作成に失敗しました {}", e);
+                return;
+            } else {
+                // サンプルソースの作成
+                let mut file = match File::create(proj_path.clone() + "bin/main.rb") {
+                    Ok(file) => file,
+                    Err(e) => {
+                        println!("ファイルの作成に失敗しました {}", e);
+                        return;
+                    }
+                };
+
+                // サンプルソースの書き込み
+            }
+            // プロジェクトのモジュールやクラスを置くディレクトリの作成
+            if let Err(e) = create_dir_all(proj_path.clone() + &proj_path.clone()) {
+                println!("ディレクトリの作成に失敗しました {}", e);
+                return;
+            } else {
+                // バージョン情報用ソースの作成
+                let mut file =
+                    match File::create(proj_path.clone() + &proj_path.clone() + "version.rb") {
+                        Ok(file) => file,
+                        Err(e) => {
+                            println!("ファイルの作成に失敗しました {}", e);
+                            return;
+                        }
+                    };
+            }
+            // テスト用ディレクトリの作成
+            if let Err(e) = create_dir_all(proj_path.clone() + "test") {
+                println!("ディレクトリの作成に失敗しました {}", e);
+                return;
+            };
+            // Rakefileの作成
+            let mut file = match File::create(proj_path.clone() + "Rakefile") {
+                Ok(file) => file,
+                Err(e) => {
+                    println!("ファイルの作成に失敗しました {}", e);
+                    return;
+                }
+            };
+            // Gemfileの作成
+            let mut file = match File::create(proj_path.clone() + "Gemfile") {
+                Ok(file) => file,
+                Err(e) => {
+                    println!("ファイルの作成に失敗しました {}", e);
+                    return;
+                }
+            };
+            // (プロジェクト名).gemspecの作成
+            let mut file = match File::create(proj_path.clone() + &proj_name.clone()+".gemspec") {
+                Ok(file) => file,
+                Err(e) => {
+                    println!("ファイルの作成に失敗しました {}", e);
+                    return;
+                }
+            };
         }
         LanguageType::Cpp => {
             let proj_name = new.name.clone();
@@ -172,7 +249,7 @@ fn create_project_directory(new: &New, out_print: bool) {
                 return;
             }
         }
-        LanguageType::Haxe => {
+        LanguageType::Hx => {
             let proj_name = new.name.clone();
             let proj_path = proj_name + "/";
             let build_conf_path = proj_path.clone() + "build.hxml";
@@ -210,7 +287,7 @@ fn create_project_directory(new: &New, out_print: bool) {
                 return;
             }
         }
-        LanguageType::Csharp => {
+        LanguageType::Cs => {
             let mut cmd = Command::new("dotnet");
             let args = new.args.clone();
 
@@ -239,7 +316,7 @@ fn create_project_directory(new: &New, out_print: bool) {
                 }
             }
         }
-        LanguageType::Rust => {
+        LanguageType::Rs => {
             let mut cmd = Command::new("cargo");
             let args = new.args.clone();
             if args.iter().all(|s| s.trim().is_empty()) {
